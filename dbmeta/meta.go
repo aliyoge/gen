@@ -44,6 +44,9 @@ type SQLMapping struct {
 	// GoType mapped go type
 	GoType string `json:"go_type"`
 
+	// Primary Key GoType mapped go type
+	GoPrimaryType string `json:"go_primary_type"`
+
 	// JSONType mapped json type
 	JSONType string `json:"json_type"`
 
@@ -331,7 +334,7 @@ func (c *Config) GenerateFieldsTypes(dbMeta DbTableMeta) ([]*FieldInfo, error) {
 			Index: i,
 		}
 
-		valueType, err := SQLTypeToGoType(strings.ToLower(col.DatabaseTypeName()), col.Nullable(), c.UseGureguTypes)
+		valueType, err := SQLTypeToGoType(strings.ToLower(col.DatabaseTypeName()), col.Nullable(), c.UseGureguTypes, col.IsPrimaryKey())
 		if err != nil { // unknown type
 			fmt.Printf("table: %s unable to generate struct field: %s type: %s error: %v\n", dbMeta.TableName(), fieldName, col.DatabaseTypeName(), err)
 			continue
@@ -387,7 +390,7 @@ func (c *Config) GenerateFieldsTypes(dbMeta DbTableMeta) ([]*FieldInfo, error) {
 		}
 
 		sqlMapping, _ := SQLTypeToMapping(strings.ToLower(col.DatabaseTypeName()))
-		goType, _ := SQLTypeToGoType(strings.ToLower(col.DatabaseTypeName()), false, false)
+		goType, _ := SQLTypeToGoType(strings.ToLower(col.DatabaseTypeName()), false, false, col.IsPrimaryKey())
 		protobufType, _ := SQLTypeToProtobufType(col.DatabaseTypeName())
 
 		// fmt.Printf("protobufType: %v  DatabaseTypeName: %v\n", protobufType, col.DatabaseTypeName())
@@ -583,7 +586,7 @@ func LoadMappings(mappingFileName string, verbose bool) error {
 }
 
 // SQLTypeToGoType map a sql type to a go type
-func SQLTypeToGoType(sqlType string, nullable bool, gureguTypes bool) (string, error) {
+func SQLTypeToGoType(sqlType string, nullable bool, gureguTypes bool, primary bool) (string, error) {
 	mapping, err := SQLTypeToMapping(sqlType)
 	if err != nil {
 		return "", err
@@ -593,6 +596,8 @@ func SQLTypeToGoType(sqlType string, nullable bool, gureguTypes bool) (string, e
 		return mapping.GureguType, nil
 	} else if nullable {
 		return mapping.GoNullableType, nil
+	} else if primary {
+		return mapping.GoPrimaryType, nil
 	} else {
 		return mapping.GoType, nil
 	}
