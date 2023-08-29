@@ -15,7 +15,7 @@ help: ## This help.
 
 check_prereq: ## check pre requisites exist
 ifndef PACKR2_EXECUTABLE
-	go get -u github.com/gobuffalo/packr/v2/packr2
+	go install github.com/gobuffalo/packr/v2/packr2
 endif
 	$(warning "found packr2")
 
